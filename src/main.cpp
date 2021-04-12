@@ -1,6 +1,12 @@
 #include "Arduino.h"
 
 #include "Servo.h"
+#include "Wire.h"
+
+
+#define AD0_VAL 1
+
+#define IMU_ADDR 0x69
 
 enum RocketStates {CALIBRATION, STANDBY, FLIGHT, APOGEE, RECOVERY, LOGGING};
 RocketStates rocketState = CALIBRATION;
@@ -98,14 +104,74 @@ void switchMachine()
   case LOGGING:
     /* code */
     break;
-    
+
   default:
     break;
   }
 }
 
+void readID()
+{
+  int id = 0;
+  Serial.print("Reading device ID: ");
+  Wire1.beginTransmission(IMU_ADDR);
+  Wire1.write(0x75);
+  Wire1.endTransmission();
+  Wire1.requestFrom(IMU_ADDR, 1);
+
+  if (Wire1.available() <= 2) 
+  {
+    id = Wire1.read();
+  }
+
+  Serial.println(id);
+
+}
+
+void readAccX()
+{
+
+  Wire1.beginTransmission(IMU_ADDR);
+  Wire1.write(0x3B);
+  Wire1.endTransmission(false);
+  Wire1.requestFrom(IMU_ADDR, 6, true);
+  
+  int16_t accX = ((int16_t) Wire1.read() << 8 | Wire1.read());
+  int16_t accY = ((int16_t) Wire1.read() << 8 | Wire1.read());
+  int16_t accZ = ((int16_t) Wire1.read() << 8 | Wire1.read());
+
+  float scaledAccX = ((float) accX) / 16384.0;
+  float scaledAccY = ((float) accY) / 16384.0;
+  float scaledAccZ = ((float) accZ) / 16384.0;
+
+  Serial.print("X: ");
+  Serial.print(scaledAccX);
+  Serial.print("  Y: ");
+  Serial.print(scaledAccY);
+  Serial.print("  Z: ");
+  Serial.println(scaledAccZ);
+
+}
+
 void setup()
 {
+
+  // Setup IMU
+  Serial.begin(115200);
+  Wire1.setSCL(16);
+  Wire1.setSDA(17);
+  Wire1.begin();
+  Wire1.setClock(400000);
+
+  Wire1.beginTransmission(IMU_ADDR);
+  Wire1.write(0x6B);
+  Wire1.write(0);
+  Wire1.endTransmission(true);
+
+  Wire1.beginTransmission(IMU_ADDR);
+  Wire1.write(0x1A);
+  Wire1.write(0);
+  Wire1.endTransmission(true);
 
   // Attach gimbal servos to correct pins
   //servoX.attach(servo1Pin);
@@ -128,7 +194,9 @@ void setup()
 void loop()
 {
 
-  switchMachine();
+  //readID();
+  readAccX();
+  delay(100);
 
 }
 

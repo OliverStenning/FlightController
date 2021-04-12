@@ -25,19 +25,6 @@
       ]
     },
     {
-      "label": "Upload (TyCommander)",
-      "group": {
-        "kind": "build",
-        "isDefault": true
-      },
-      "command": "C:/Program Files/VisualTeensy/make.exe",
-      "args": [
-        "uploadTy",
-        "-j",
-        "-Otarget"
-      ]
-    },
-    {
       "label": "Upload",
       "group": {
         "kind": "build",

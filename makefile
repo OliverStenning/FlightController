@@ -7,7 +7,7 @@
 # Optimize           Faster
 # Keyboard Layout    US English
 #
-# 11/04/2021 14:50
+# 11/04/2021 19:39
 #******************************************************************************
 SHELL            := cmd.exe
 export SHELL
@@ -18,10 +18,10 @@ BOARD_ID         := TEENSY41
 MCU              := imxrt1062
 
 LIBS_SHARED_BASE := C:\Users\Oliver\Documents\Arduino\libraries
-LIBS_SHARED      := 
+LIBS_SHARED      := ICM-20602-Teensy-Library-master 
 
 LIBS_LOCAL_BASE  := lib
-LIBS_LOCAL       := ADC SD Servo Wire SPI 
+LIBS_LOCAL       := ADC SD Servo SPI Wire 
 
 CORE_BASE        := C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4
 GCC_BASE         := C:\PROGRA~2\Arduino\hardware\tools\arm\bin

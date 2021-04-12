@@ -5,11 +5,12 @@
       "includePath": [
         "src/**",
         "C:/Program Files (x86)/Arduino/hardware/teensy/avr/cores/teensy4",
+        "C:/Users/Oliver/Documents/Arduino/libraries/ICM-20602-Teensy-Library-master/**",
         "lib/ADC/**",
         "lib/SD/**",
         "lib/Servo/**",
-        "lib/Wire/**",
-        "lib/SPI/**"
+        "lib/SPI/**",
+        "lib/Wire/**"
       ],
       "forcedInclude": [],
       "defines": [
