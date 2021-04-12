@@ -1,18 +1,15 @@
 #include "Arduino.h"
 
 #include "Servo.h"
-#include "Wire.h"
-
-
-#define AD0_VAL 1
-
-#define IMU_ADDR 0x69
+#include "IMU.h"
 
 enum RocketStates {CALIBRATION, STANDBY, FLIGHT, APOGEE, RECOVERY, LOGGING};
 RocketStates rocketState = CALIBRATION;
 
 Servo servoX;
 Servo servoY;
+
+IMU imu;
 
 const int servo1Pin = 20;
 const int servo2Pin = 21;
@@ -33,22 +30,18 @@ const int buzzerPin = 33;
 - Data logging
 */
 
-void enableBuzzer()
-{
+void enableBuzzer() {
   // 50% duty cycle when enabled
   analogWrite(buzzerPin, 127);
 }
 
-void disableBuzzer()
-{
+void disableBuzzer() {
   // 0% duty cycle when disabled
   analogWrite(buzzerPin, 0);
 }
 
-void setRGB(int r, int g, int b)
-{
-  if (r > 0) 
-  {
+void setRGB(int r, int g, int b) {
+  if (r > 0) {
     // Enable LED
     digitalWrite(redPin, LOW);
   } else {
@@ -56,8 +49,7 @@ void setRGB(int r, int g, int b)
     digitalWrite(redPin, HIGH);
   }
 
-  if (g > 0)
-  {
+  if (g > 0) {
     // Enable
     digitalWrite(greenPin, LOW);
   } else {
@@ -65,22 +57,17 @@ void setRGB(int r, int g, int b)
     digitalWrite(greenPin, HIGH);
   }
   
-  if (b > 0)
-  {
+  if (b > 0) {
     // Enable
     digitalWrite(bluePin, LOW);
   } else {
     // Disable
     digitalWrite(bluePin, HIGH);
   }
-  
-  
 }
 
-void switchMachine()
-{
-  switch (rocketState)
-  {
+void switchMachine() {
+  switch (rocketState) {
   case CALIBRATION:
     /* code */
     break;
@@ -110,68 +97,14 @@ void switchMachine()
   }
 }
 
-void readID()
-{
-  int id = 0;
-  Serial.print("Reading device ID: ");
-  Wire1.beginTransmission(IMU_ADDR);
-  Wire1.write(0x75);
-  Wire1.endTransmission();
-  Wire1.requestFrom(IMU_ADDR, 1);
+void setup() {
 
-  if (Wire1.available() <= 2) 
-  {
-    id = Wire1.read();
-  }
-
-  Serial.println(id);
-
-}
-
-void readAccX()
-{
-
-  Wire1.beginTransmission(IMU_ADDR);
-  Wire1.write(0x3B);
-  Wire1.endTransmission(false);
-  Wire1.requestFrom(IMU_ADDR, 6, true);
-  
-  int16_t accX = ((int16_t) Wire1.read() << 8 | Wire1.read());
-  int16_t accY = ((int16_t) Wire1.read() << 8 | Wire1.read());
-  int16_t accZ = ((int16_t) Wire1.read() << 8 | Wire1.read());
-
-  float scaledAccX = ((float) accX) / 16384.0;
-  float scaledAccY = ((float) accY) / 16384.0;
-  float scaledAccZ = ((float) accZ) / 16384.0;
-
-  Serial.print("X: ");
-  Serial.print(scaledAccX);
-  Serial.print("  Y: ");
-  Serial.print(scaledAccY);
-  Serial.print("  Z: ");
-  Serial.println(scaledAccZ);
-
-}
-
-void setup()
-{
-
-  // Setup IMU
+  // Setup serial for USB monitoring
   Serial.begin(115200);
-  Wire1.setSCL(16);
-  Wire1.setSDA(17);
-  Wire1.begin();
-  Wire1.setClock(400000);
 
-  Wire1.beginTransmission(IMU_ADDR);
-  Wire1.write(0x6B);
-  Wire1.write(0);
-  Wire1.endTransmission(true);
-
-  Wire1.beginTransmission(IMU_ADDR);
-  Wire1.write(0x1A);
-  Wire1.write(0);
-  Wire1.endTransmission(true);
+  // Enable IMU by changing registers
+  imu.enable();
+  imu.enableLPF(20.0, 0.01);
 
   // Attach gimbal servos to correct pins
   //servoX.attach(servo1Pin);
@@ -191,11 +124,19 @@ void setup()
   analogWriteFrequency(buzzerPin, 4000);
 }
 
-void loop()
-{
+void loop() {
 
-  //readID();
-  readAccX();
+  imu.update();
+
+  char outputBuf[100];
+  //sprintf(outputBuf, "X: % 6.3f  Y: % 6.3f  Z: % 6.3f  X: % 6.3f  Y: % 6.3f  Z: % 6.3f  T: % 6.3f", accX, accY, accZ, gyroX, gyroY, gyroZ, temp);
+  //sprintf(outputBuf, "% 6.3f,% 6.3f,% 6.3f,% 6.3f,% 6.3f,% 6.3f", accX, accY, accZ, gyroX, gyroY, gyroZ);
+  //sprintf(outputBuf, "% 4.2f,% 4.2f,% 4.2f", accX, accY, accZ);
+  sprintf(outputBuf, "% 4.2f,% 4.2f", imu.acc[0], imu.filtAcc[0][0]);
+
+  Serial.println(outputBuf);
+
+
   delay(100);
 
 }
